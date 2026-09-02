@@ -193,6 +193,10 @@ namespace PoroPressureBased
     //! FD-Check
     void poro_multi_phase_scatra_fd_check();
 
+    //! print the monolithic system matrix, the rhs vector and the full dof map to matlab-readable
+    //! files
+    void print_system_matrix_rhs_to_matlab_format();
+
     //! convergence tolerance (increment)
     double iter_tol_inc_;
     //! convergence tolerance (residual)
@@ -294,6 +298,9 @@ namespace PoroPressureBased
 
     //! flag for finite difference check
     bool fdcheck_;
+
+    //! flag for printing the monolithic system matrix, rhs vector and full dof map to matlab files
+    bool print_matlab_;
   };
 
   //! Monolithic solution scheme for porofluid-elasticity problems with scalar transport and

@@ -15,6 +15,7 @@
 #include "4C_fem_general_assemblestrategy.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_equilibrate.hpp"
+#include "4C_linalg_utils_sparse_algebra_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -76,7 +77,8 @@ PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::PorofluidElastScatra
       timernewton_("", true),
       dtsolve_(0.0),
       dtele_(0.0),
-      fdcheck_(false)
+      fdcheck_(false),
+      print_matlab_(false)
 {
 }
 
@@ -110,6 +112,8 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::init(
   blockrowdofmap_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
 
   fdcheck_ = algoparams.sublist("monolithic").get<bool>("fd_check");
+
+  print_matlab_ = algoparams.sublist("monolithic").get<bool>("print_mat_rhs_map_matlab");
 
   equilibration_method_ = Teuchos::getIntegralValue<Core::LinAlg::EquilibrationMethod>(
       algoparams.sublist("monolithic").sublist("nonlinear_solver"), "equilibration");
@@ -377,6 +381,9 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::time_step()
 
   // Error-Check
   newton_error_check();
+
+  // print the monolithic system matrix, rhs vector and full dof map to matlab-readable files
+  if (print_matlab_) print_system_matrix_rhs_to_matlab_format();
 
   return;
 }
@@ -1025,6 +1032,8 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::newton_error_ch
           "-------+-----------------+\n");
       printf("\n");
       printf("\n");
+
+      print_system_matrix_rhs_to_matlab_format();
     }
     handle_divergence();
   }
@@ -1311,6 +1320,39 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
   }
   else
     FOUR_C_THROW("PoroFDCheck failed");
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::
+    print_system_matrix_rhs_to_matlab_format()
+{
+  // prefix of all file names: <output-file-name>_step_<step>
+  const std::string filebase =
+      algorithm_deps().porofluid_elast_algorithm_deps.output_control_file->file_name() + "_step_" +
+      std::to_string(step());
+
+  // print the individual blocks of the monolithic system matrix
+  for (int row = 0; row < systemmatrix_->rows(); ++row)
+  {
+    for (int col = 0; col < systemmatrix_->cols(); ++col)
+    {
+      std::ostringstream filename;
+      filename << filebase << "_block_system_matrix_" << row << "_" << col << ".csv";
+      Core::LinAlg::print_matrix_in_matlab_format(
+          filename.str(), systemmatrix_->matrix(row, col), true);
+    }
+  }
+
+  // print the merged (non-blocked) monolithic system matrix
+  Core::LinAlg::print_matrix_in_matlab_format(
+      filebase + "_sparse_system_matrix.csv", *systemmatrix_->merge(), true);
+
+  // print the monolithic rhs vector
+  Core::LinAlg::print_vector_in_matlab_format(filebase + "_rhs_vector.csv", *rhs_, true);
+
+  // print the full monolithic dof row map
+  Core::LinAlg::print_map_in_matlab_format(filebase + "_full_map.csv", *dof_row_map(), true);
 }
 
 /*----------------------------------------------------------------------*
