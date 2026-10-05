@@ -138,6 +138,14 @@ std::vector<Core::IO::InputSpec> PoroPressureBased::valid_parameters_porofluid_e
 
           // finite difference check
           parameter<bool>("fd_check", {.description = "FD check active", .default_value = false}),
+
+          // print the monolithic system matrix, rhs vector and full dof map to matlab-readable
+          // files
+          parameter<bool>("print_mat_rhs_map_matlab",
+              {.description =
+                      "print the monolithic system matrix, the rhs vector, and the full dof map "
+                      "to matlab-readable files after each solved time step",
+                  .default_value = false}),
       },
       {.required = false}));
 

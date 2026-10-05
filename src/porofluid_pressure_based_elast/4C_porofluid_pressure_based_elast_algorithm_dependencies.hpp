@@ -31,6 +31,7 @@ namespace Core::FE
 namespace Core::IO
 {
   class InputControl;
+  class OutputControl;
 }  // namespace Core::IO
 
 namespace Core::Utils
@@ -56,6 +57,7 @@ namespace PoroPressureBased
     std::function<const ::Teuchos::ParameterList&(int)> solver_params_by_id;
     Core::IO::Verbositylevel verbosity{};
     std::shared_ptr<Core::IO::InputControl> input_control_file;
+    std::shared_ptr<Core::IO::OutputControl> output_control_file;
     std::function<void(std::shared_ptr<Core::Utils::ResultTest>)> add_field_test;
     PorofluidAlgorithmDeps porofluid_algorithm_deps;
   };

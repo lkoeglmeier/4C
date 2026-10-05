@@ -38,6 +38,7 @@ PoroPressureBased::make_elast_algorithm_deps_from_problem(Global::Problem& probl
       .verbosity =
           Teuchos::getIntegralValue<Core::IO::Verbositylevel>(problem.io_params(), "VERBOSITY"),
       .input_control_file = problem.input_control_file(),
+      .output_control_file = problem.output_control_file(),
       .add_field_test = [&problem](std::shared_ptr<Core::Utils::ResultTest> result_test)
       { problem.add_field_test(result_test); },
       .porofluid_algorithm_deps = make_algorithm_deps_from_problem(problem),
